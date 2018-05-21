@@ -78,6 +78,10 @@
 			self::add_term('dbm_relation:global-pages/sign-in/signed-out', 'Signed out');
 			self::add_term('dbm_relation:global-pages/sign-in/start-page', 'Start page');
 			
+			self::add_term('dbm_relation:restrict-access', 'Restrict access');
+			self::add_term('dbm_relation:restrict-access/require-signed-in', 'Require signed in');
+			self::add_term('dbm_relation:restrict-access/ignore-login-restriction', 'Ignore login restriction');
+			
 			self::add_term('dbm_relation:notice-types', 'Notice types');
 			self::add_term('dbm_relation:notice-types/error-notice', 'Error notice');
 			self::add_term('dbm_relation:notice-types/success-notice', 'Success notice');

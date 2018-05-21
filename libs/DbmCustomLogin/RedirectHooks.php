@@ -37,6 +37,16 @@
 			
 		}
 		
+		protected function has_any_relation($terms) {
+			foreach($terms as $term) {
+				if(isset($term) && has_term($term->term_id, 'dbm_relation')) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
 		public function hook_template_redirect() {
 			//echo("\DbmCustomLogin\RedirectHooks::hook_template_redirect<br />");
 			
@@ -53,13 +63,37 @@
 				}
 			
 				if(isset($sign_in_term) && has_term($sign_in_term->term_id, 'dbm_relation') && $is_logged_in) {
-					wp_redirect($this->get_global_page_url(array('global-pages', 'my-account')), 302);
+					wp_redirect($this->get_global_page_url(array('global-pages', 'start-page')), 302);
 					exit;
 				}
 			
 				if(isset($sign_up_term) && has_term($sign_up_term->term_id, 'dbm_relation') && $is_logged_in) {
 					wp_redirect($this->get_global_page_url(array('global-pages', 'my-account')), 302);
 					exit;
+				}
+				
+				if(isset($sign_in_term) && !$is_logged_in) {
+					
+					$forgot_term = dbm_get_relation(array('global-pages', 'reset-password'));
+					$reset_term = dbm_get_relation(array('global-pages', 'lost-password'));
+					$ignore_term = dbm_get_relation_by_path('restrict-access/ignore-login-restriction');
+					
+					if(!$this->has_any_relation(array($sign_in_term, $sign_up_term, $forgot_term, $reset_term, $ignore_term))) {
+						
+						$require_sign_in_term = dbm_get_relation_by_path('restrict-access/require-signed-in');
+					
+						$require_sign_in = (isset($require_sign_in_term) && has_term($require_sign_in_term->term_id, 'dbm_relation')) || apply_filters('dbm_custom_login/require_sign_in_for_all_pages', false, get_the_ID(), get_post());
+					
+						if($require_sign_in) {
+							$sign_in_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
+							
+							$requested_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+							
+							$sign_in_url .= '?redirect_to='.urlencode($requested_url);
+							wp_redirect($sign_in_url, 302);
+							exit;
+						}
+					}
 				}
 			}
 		}

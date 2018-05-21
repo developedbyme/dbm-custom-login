@@ -47,6 +47,13 @@
 			
 			$api_namespace = 'dbm-custom-login';
 			
+			//Utils
+			$current_end_point = new \DbmCustomLogin\OddCore\RestApi\ReactivatePluginEndpoint();
+			$current_end_point->set_plugin($this);
+			$current_end_point->add_headers(array('Access-Control-Allow-Origin' => '*'));
+			$current_end_point->setup('reactivate-plugin', $api_namespace, 1, 'GET');
+			$this->_rest_api_end_points[] = $current_end_point;
+			
 		}
 		
 		

@@ -63,7 +63,7 @@
 				}
 			
 				if(isset($sign_in_term) && has_term($sign_in_term->term_id, 'dbm_relation') && $is_logged_in) {
-					wp_redirect($this->get_global_page_url(array('global-pages', 'start-page')), 302);
+					wp_redirect($this->get_global_page_url(array('global-pages', 'sign-in', 'start-page')), 302);
 					exit;
 				}
 			

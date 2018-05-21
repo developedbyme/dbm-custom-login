@@ -269,6 +269,11 @@
 		}
 		
 		public function filter_replace_retrieve_password_message( $message, $key, $user_login, $user_data ) {
+			
+			add_filter( 'wp_mail_content_type', function() {
+				return "text/html";
+			});
+			
 			// Create new message
 			$msg  = __( 'Hello!', 'personalize-login' ) . "<br /><br />";
 			$msg .= sprintf( __( 'You asked us to reset your password for your account using the email address %s.', 'personalize-login' ), $user_login ) . "<br /><br />";

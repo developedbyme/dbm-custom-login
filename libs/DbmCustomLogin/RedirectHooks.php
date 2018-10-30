@@ -206,22 +206,46 @@
 				return $redirect_url;
 			}
 			
-			if(user_can($user, 'edit_posts')) {
-				// Use the redirect_to parameter if one is set, otherwise redirect to admin dashboard.
-				if($requested_redirect_to == '' || $requested_redirect_to == home_url()) {
-					$redirect_url = admin_url();
+			$admin_url = admin_url();
+			
+			if(substr($requested_redirect_to, 0, strlen($admin_url)) === $admin_url) {
+				
+				if(user_can($user, 'edit_posts')) {
+					// Use the redirect_to parameter if one is set, otherwise redirect to admin dashboard.
+					$redirect_url = $requested_redirect_to;
+				}
+				else {
+					// Non-admin users always go to their account page after login
+					$start_page_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'start-page'));
+					if($start_page_url !== null) {
+						$redirect_url = $start_page_url;
+					}
+					else {
+						$redirect_url = $requested_redirect_to;
+					}
+					$redirect_url = apply_filters("dbm_custom_login/default_page_after_login", $redirect_url, $requested_redirect_to, $user);
+				}
+			}
+			else {
+				if($requested_redirect_to == '') {
+					if(user_can($user, 'edit_posts')) {
+						$redirect_url = admin_url();
+					}
+					else {
+						$start_page_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'start-page'));
+						if($start_page_url !== null) {
+							$redirect_url = $start_page_url;
+						}
+						else {
+							$redirect_url = $redirect_to;
+						}
+					}
 				}
 				else {
 					$redirect_url = $requested_redirect_to;
 				}
-			}
-			else {
-				// Non-admin users always go to their account page after login
-				$start_page_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'start-page'));
-				if($start_page_url !== null) {
-					$redirect_url = $start_page_url;
-				}
 				
+				$redirect_url = apply_filters("dbm_custom_login/default_page_after_login", $redirect_url, $requested_redirect_to, $user);
 			}
 			
 			return wp_validate_redirect($redirect_url, home_url());

@@ -275,12 +275,12 @@
 			});
 			
 			// Create new message
-			$msg  = __( 'Hello!', 'personalize-login' ) . "<br /><br />";
-			$msg .= sprintf( __( 'You asked us to reset your password for your account using the email address %s.', 'personalize-login' ), $user_login ) . "<br /><br />";
-			$msg .= __( "If this was a mistake, or you didn't ask for a password reset, just ignore this email and nothing will happen.", 'personalize-login' ) . "<br /><br />";
-			$msg .= __( 'To reset your password, visit the following address:', 'personalize-login' ) . "<br /><br />";
+			$msg  = __( 'Hello!', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
+			$msg .= sprintf( __( 'You asked us to reset your password for your account using the email address %s.', DBM_CUSTOM_LOGIN_TEXTDOMAIN ), $user_login ) . "<br /><br />";
+			$msg .= __( "If this was a mistake, or you didn't ask for a password reset, just ignore this email and nothing will happen.", DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
+			$msg .= __( 'To reset your password, visit the following address:', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
 			$msg .= site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' ) . "<br /><br />";
-			$msg .= __( 'Thanks!', 'personalize-login' ) . "<br />";
+			$msg .= __( 'Thanks!', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br />";
  
 			return $msg;
 		}

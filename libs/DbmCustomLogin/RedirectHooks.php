@@ -330,11 +330,13 @@
 				else {
 					$reset_password_page_url = $this->get_global_page_url(array('global-pages', 'reset-password'));
 					
-					$reset_password_page_url = add_query_arg('login', esc_attr($_REQUEST['login']), $reset_password_page_url);
-					$reset_password_page_url = add_query_arg('key', esc_attr($_REQUEST['key']), $reset_password_page_url);
-					
-					wp_redirect($reset_password_page_url);
-					exit;
+					if($reset_password_page_url) {
+						$reset_password_page_url = add_query_arg('login', esc_attr($_REQUEST['login']), $reset_password_page_url);
+						$reset_password_page_url = add_query_arg('key', esc_attr($_REQUEST['key']), $reset_password_page_url);
+						
+						wp_redirect($reset_password_page_url);
+						exit;
+					}
 				}
 			}
 		}

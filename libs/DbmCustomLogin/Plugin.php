@@ -8,8 +8,6 @@
 		function __construct() {
 			//echo("\DbmCustomLogin\Plugin::__construct<br />");
 			
-			$this->add_additional_hook(new \DbmCustomLogin\RedirectHooks());
-			
 			$this->_default_hook_priority = 20;
 			
 			parent::__construct();
@@ -39,6 +37,8 @@
 		protected function create_additional_hooks() {
 			//echo("\DbmCustomLogin\Plugin::create_additional_hooks<br />");
 			
+			$this->add_additional_hook(new \DbmCustomLogin\RedirectHooks());
+			$this->add_additional_hook(new \DbmCustomLogin\ApiActionHooks());
 			
 		}
 		

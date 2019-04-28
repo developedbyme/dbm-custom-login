@@ -98,6 +98,9 @@
 			}
 		}
 		
+		/**
+		 * Redirect anyone who browse to the wp-login.php page. Ignore all posts to it
+		 */
 		public function hook_login_form_login() {
 			//echo("\DbmCustomLogin\RedirectHooks::hook_login_form_login<br />");
 			
@@ -149,9 +152,11 @@
 			if(user_can($user, 'edit_posts')) {
 				if($redirect_to) {
 					wp_safe_redirect($redirect_to);
+					exit;
 				}
 				else {
 					wp_redirect(admin_url());
+					exit;
 				}
 			}
 			else {
@@ -163,10 +168,16 @@
 				}
 				
 				wp_redirect($redirect_url);
+				exit;
 			}
 		}
 		
+		/**
+		 * Redirect all the failed logins to the custom sign in pages.
+		 */
 		public function filter_maybe_redirect_at_authenticate($user, $username, $password) {
+			//echo("\DbmCustomLogin\RedirectHooks::filter_maybe_redirect_at_authenticate<br />");
+			
 			// Check if the earlier authenticate filter (most likely, 
 			// the default WordPress authentication) functions have found errors
 			if($_SERVER['REQUEST_METHOD'] === 'POST') {

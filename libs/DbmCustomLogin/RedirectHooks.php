@@ -277,46 +277,143 @@
 			}
 		}
 		
+		protected function send_custom_reset_email($email_id) {
+			$sign_in_page_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
+			$lost_password_url = $this->get_global_page_url(array('global-pages', 'lost-password'));
+			
+			$errors = new \WP_Error();
+			
+			if ( strpos( $_POST['user_login'], '@' ) ) {
+				$user_data = get_user_by( 'email', trim( wp_unslash( $_POST['user_login'] ) ) );
+				if ( empty( $user_data ) ) {
+					$errors->add( 'invalid_email', __( '<strong>ERROR</strong>: There is no account with that username or email address.' ) );
+				}
+			}
+			else {
+				$login     = trim( $_POST['user_login'] );
+				$user_data = get_user_by( 'login', $login );
+			}
+			
+			if ( ! $user_data ) {
+				$errors->add( 'invalidcombo', __( '<strong>ERROR</strong>: There is no account with that username or email address.' ) );
+			}
+			
+			if ( $errors->has_errors() ) {
+				$lost_password_url = add_query_arg('notice', join(',' , $errors->get_error_codes()), $lost_password_url);
+				wp_redirect($lost_password_url);
+				exit;
+			}
+			
+			$key = get_password_reset_key( $user_data );
+			
+			if(is_wp_error($key)) {
+				// Errors found
+				$errors = $key;
+				
+				if($lost_password_url) {
+					$lost_password_url = add_query_arg('notice', join(',' , $errors->get_error_codes()), $lost_password_url);
+					wp_redirect($lost_password_url);
+					exit;
+				}
+			}
+			else {
+				// Email sent
+				$url = site_url( "wp-login.php", 'login' );
+			
+				$reset_page_id = dbm_new_query('page')->add_relation_by_path('global-pages/reset-password')->get_post_id();
+				if($reset_page_id) {
+					$url = get_permalink($reset_page_id);
+				}
+			
+				$url .= '?action=rp&key='.$key.'&login=' . rawurlencode( $user_data->user_login );
+				
+				$email = $user_data->user_email;
+				
+				$replacements = array(
+					'key' => $key,
+					'login' => $user_data->user_login,
+					'email' => $email,
+					'link' => $url
+				);
+			
+				$template = dbm_content_tc_get_template_with_replacements($email_id, $replacements);
+				
+				dbm_content_tc_send_email($template['title'], $template['body'], $email, 'info@digitalprocurement.se');
+				
+				if($sign_in_page_url) {
+					$sign_in_page_url = add_query_arg('notice', 'check_email_confirm', $sign_in_page_url);
+					wp_redirect($sign_in_page_url);
+					exit;
+				}
+			}
+		}
+		
+		protected function send_standard_reset_email() {
+			$errors = retrieve_password();
+			
+			if(is_wp_error($errors)) {
+				// Errors found
+				
+				$lost_password_url = $this->get_global_page_url(array('global-pages', 'lost-password'));
+				if($lost_password_url) {
+					$lost_password_url = add_query_arg('notice', join(',' , $errors->get_error_codes()), $lost_password_url);
+					wp_redirect($lost_password_url);
+					exit;
+				}
+			}
+			else {
+				// Email sent
+				$sign_in_page_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
+				if($sign_in_page_url) {
+					$sign_in_page_url = add_query_arg('notice', 'check_email_confirm', $sign_in_page_url);
+					wp_redirect($sign_in_page_url);
+					exit;
+				}
+			}
+		}
+		
+		protected function get_custom_reset_password_email_id() {
+			//METODO: move this to a filter
+			global $sitepress;
+			if($sitepress) {
+				var_dump($sitepress->get_current_language());
+				$email_id = dbm_new_query('dbm_additional')->add_relation_by_path('langauges/'.$sitepress->get_current_language())->add_relation_by_path('global-transactional-templates/reset-password')->get_post_id();
+				if($email_id) {
+					return $email_id;
+				}
+			}
+			
+			$email_id = dbm_new_query('dbm_additional')->add_relation_by_path('global-transactional-templates/reset-password')->get_post_id();
+			
+			return $email_id;
+		}
+		
 		public function hook_do_password_lost() {
 			if('POST' == $_SERVER['REQUEST_METHOD']) {
-				$errors = retrieve_password();
 				
-				if(is_wp_error($errors)) {
-					// Errors found
-					
-					$lost_password_url = $this->get_global_page_url(array('global-pages', 'lost-password'));
-					if($lost_password_url) {
-						$lost_password_url = add_query_arg('notice', join(',' , $errors->get_error_codes()), $lost_password_url);
-						wp_redirect($lost_password_url);
-						exit;
-					}
+				$email_id = $this->get_custom_reset_password_email_id();
+				if($email_id && function_exists('dbm_content_tc_get_template_with_replacements')) {
+					$this->send_custom_reset_email($email_id);
 				}
 				else {
-					// Email sent
-					$sign_in_page_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
-					if($sign_in_page_url) {
-						$sign_in_page_url = add_query_arg('notice', 'check_email_confirm', $sign_in_page_url);
-						wp_redirect($sign_in_page_url);
-						exit;
-					}
+					$this->send_standard_reset_email();
 				}
 			}
 		}
 		
 		public function filter_replace_retrieve_password_message( $message, $key, $user_login, $user_data ) {
 			
-			add_filter( 'wp_mail_content_type', function() {
-				return "text/html";
-			});
+			$url = site_url( "wp-login.php", 'login' );
+			$url .= '?action=rp&key='.$key.'&login=' . rawurlencode( $user_login );
 			
 			// Create new message
 			$msg  = __( 'Hello!', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
 			$msg .= sprintf( __( 'You asked us to reset your password for your account using the email address %s.', DBM_CUSTOM_LOGIN_TEXTDOMAIN ), $user_login ) . "<br /><br />";
 			$msg .= __( "If this was a mistake, or you didn't ask for a password reset, just ignore this email and nothing will happen.", DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
 			$msg .= __( 'To reset your password, visit the following address:', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br /><br />";
-			$msg .= site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' ) . "<br /><br />";
+			$msg .= $url . "<br /><br />";
 			$msg .= __( 'Thanks!', DBM_CUSTOM_LOGIN_TEXTDOMAIN ) . "<br />";
- 
+			
 			return $msg;
 		}
 		

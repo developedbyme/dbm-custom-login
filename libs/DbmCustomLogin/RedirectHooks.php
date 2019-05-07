@@ -338,7 +338,7 @@
 			
 				$template = dbm_content_tc_get_template_with_replacements($email_id, $replacements);
 				
-				dbm_content_tc_send_email($template['title'], $template['body'], $email, 'info@digitalprocurement.se');
+				dbm_content_tc_send_email($template['title'], $template['body'], $email, get_option('admin_email'));
 				
 				if($sign_in_page_url) {
 					$sign_in_page_url = add_query_arg('notice', 'check_email_confirm', $sign_in_page_url);

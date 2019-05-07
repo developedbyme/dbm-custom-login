@@ -376,16 +376,18 @@
 			//METODO: move this to a filter
 			global $sitepress;
 			if($sitepress) {
-				$email_id = dbm_new_query('dbm_additional')->add_relation_by_path('languages/'.$sitepress->get_current_language())->add_relation_by_path('global-transactional-templates/reset-password')->get_post_id();
-				var_dump($email_id);
+				$email_query = dbm_new_query('dbm_additional')->add_relation_by_path('languages/'.$sitepress->get_current_language())->add_relation_by_path('global-transactional-templates/reset-password');
+				$email_id = $email_query->get_post_id();
+				var_dump($email_id, $email_query->get_query_args());
 				if($email_id) {
 					return $email_id;
 				}
 			}
 			
-			$email_id = dbm_new_query('dbm_additional')->add_relation_by_path('global-transactional-templates/reset-password')->get_post_id();
+			$email_query = dbm_new_query('dbm_additional')->add_relation_by_path('global-transactional-templates/reset-password');
+			$email_id = $email_query->get_post_id();
 			
-			var_dump($email_id);
+			var_dump($email_id, $email_query->get_query_args());
 			return $email_id;
 		}
 		

@@ -119,7 +119,7 @@
 			);
 			
 			$success_notices = array(
-				'password_changed' => __('Your passwod has been updated.', DBM_CUSTOM_LOGIN_TEXTDOMAIN),
+				'password_changed' => __('Your password has been updated.', DBM_CUSTOM_LOGIN_TEXTDOMAIN),
 				'signed_out' => __('You are now signed out.', DBM_CUSTOM_LOGIN_TEXTDOMAIN),
 				'check_email_confirm' => __('Check your email for a link to reset your password.', DBM_CUSTOM_LOGIN_TEXTDOMAIN),
 			);

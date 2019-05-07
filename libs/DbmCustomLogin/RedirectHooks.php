@@ -403,6 +403,10 @@
 		
 		public function filter_replace_retrieve_password_message( $message, $key, $user_login, $user_data ) {
 			
+			add_filter( 'wp_mail_content_type', function() {
+				return "text/html";
+			});
+			
 			$url = site_url( "wp-login.php", 'login' );
 			$url .= '?action=rp&key='.$key.'&login=' . rawurlencode( $user_login );
 			

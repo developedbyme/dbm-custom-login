@@ -378,7 +378,6 @@
 			if($sitepress) {
 				$email_query = dbm_new_query('dbm_additional')->add_relation_by_path('languages/'.$sitepress->get_current_language())->add_relation_by_path('global-transactional-templates/reset-password');
 				$email_id = $email_query->get_post_id();
-				var_dump($email_id, $email_query->get_query_args());
 				if($email_id) {
 					return $email_id;
 				}
@@ -387,7 +386,6 @@
 			$email_query = dbm_new_query('dbm_additional')->add_relation_by_path('global-transactional-templates/reset-password');
 			$email_id = $email_query->get_post_id();
 			
-			var_dump($email_id, $email_query->get_query_args());
 			return $email_id;
 		}
 		
@@ -395,8 +393,6 @@
 			if('POST' == $_SERVER['REQUEST_METHOD']) {
 				
 				$email_id = $this->get_custom_reset_password_email_id();
-				var_dump($email_id);
-				die();
 				
 				if($email_id && function_exists('dbm_content_tc_get_template_with_replacements')) {
 					$this->send_custom_reset_email($email_id);

@@ -95,6 +95,14 @@
 						}
 					}
 				}
+				
+				if(is_singular()) {
+					$current_id = get_the_ID();
+					
+					if(dbm_has_post_type($current_id, 'magic-link')) {
+						dbm_custom_login_try_to_apply_magic_link($current_id, $_GET['code'], $_GET['validation']);
+					}
+				}
 			}
 		}
 		

@@ -69,6 +69,9 @@
 			//METODO: add dbm terms
 			self::add_term('dbm_type:notice', 'Notice');
 			self::add_term('dbm_type:admin-grouping', 'Admin grouping');
+			self::add_term('dbm_type:admin-grouping/magic-links', 'Magic links');
+			
+			self::add_term('dbm_type:magic-link', 'Magic link');
 			
 			self::add_term('dbm_relation:global-pages/lost-password', 'Lost password');
 			self::add_term('dbm_relation:global-pages/my-account', 'My account');
@@ -86,7 +89,13 @@
 			self::add_term('dbm_relation:notice-types/error-notice', 'Error notice');
 			self::add_term('dbm_relation:notice-types/success-notice', 'Success notice');
 			self::add_term('dbm_relation:notice-types/warning-notice', 'Warning notice');
+			
 			self::add_term('dbm_relation:notices', 'Notices');
+			
+			self::add_term('dbm_relation:magic-link-status', 'Magic link status');
+			self::add_term('dbm_relation:magic-link-status/unused', 'Unused');
+			self::add_term('dbm_relation:magic-link-status/used', 'Used');
+			self::add_term('dbm_relation:magic-link-status/cancelled', 'Cancelled');
 			
 			$current_page_id = self::create_page('sign-in', 'Sign in', 'page');
 			self::add_terms_to_post(array('dbm_relation:global-pages/sign-in', 'dbm_relation:global-pages/sign-in/signed-out'), $current_page_id);
@@ -101,6 +110,8 @@
 			$current_page_id = self::create_page('reset-password', 'Reset password', 'page', $current_parent_id);
 			self::add_terms_to_post(array('dbm_relation:global-pages/reset-password'), $current_page_id);
 			
+			$current_page_id = self::create_page('magic-links', 'Magic links', 'dbm_additional');
+			self::add_terms_to_post(array('dbm_type:admin-grouping', 'dbm_type:admin-grouping/magic-links'), $current_page_id);
 			
 			
 			$notice_parent_id = self::create_page('notices', 'Notices', 'dbm_area');

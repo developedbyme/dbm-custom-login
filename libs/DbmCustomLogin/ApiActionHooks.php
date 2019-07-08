@@ -11,10 +11,11 @@
 
 		public function register() {
 			//echo("\DbmCustomLogin\ApiActionHooks::register<br />");
-
+			
 			add_action('wprr/api_action/has-user', array($this, 'hook_has_user'), 10, 2);
 			add_action('wprr/api_action/register-user', array($this, 'hook_register_user'), 10, 2);
 			
+			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
 		}
 
 		public function hook_has_user($data, &$response_data) {
@@ -71,6 +72,24 @@
 			}
 			
 			$response_data['registered'] = $registered;
+		}
+		
+		public function hook_generate_magic_link($data, &$response_data) {
+			//echo("\DbmCustomLogin\ApiActionHooks::hook_generate_magic_link<br />");
+			
+			$user_id = $data['userId'];
+			$link = $data['link'];
+			
+			$is_admin = current_user_can('administrator');
+			
+			$can_generate = apply_filters(DBM_CUSTOM_LOGIN_DOMAIN.'/can_generate_magic_link', $is_admin, $data);
+			
+			if(!$can_generate) {
+				throw(new \Exception('Not permitted'));
+			}
+			
+			$response_data['link'] = dbm_custom_login_create_magic_link($user_id, $link);
+			
 		}
 		
 		public static function test_import() {

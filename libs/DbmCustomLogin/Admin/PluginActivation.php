@@ -73,6 +73,7 @@
 			
 			self::add_term('dbm_type:magic-link', 'Magic link');
 			
+			self::add_term('dbm_relation:global-pages', 'Global pages');
 			self::add_term('dbm_relation:global-pages/lost-password', 'Lost password');
 			self::add_term('dbm_relation:global-pages/my-account', 'My account');
 			self::add_term('dbm_relation:global-pages/reset-password', 'Reset password');

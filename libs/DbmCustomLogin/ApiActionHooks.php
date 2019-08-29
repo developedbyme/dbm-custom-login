@@ -67,6 +67,13 @@
 						
 						$registered = true;
 						$response_data['userId'] = $new_user_id;
+						
+						$login_after_new_user_created = apply_filters('dbm_custom_login/login_after_new_user_created', true, $new_user_id, $data);
+						if($login_after_new_user_created) {
+							wp_clear_auth_cookie();
+							wp_set_current_user($new_user_id);
+							wp_set_auth_cookie($new_user_id);
+						}
 					}
 				}
 			}

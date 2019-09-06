@@ -53,51 +53,86 @@
 			$is_logged_in = is_user_logged_in();
 			
 			if(function_exists('dbm_get_relation')) {
-				$my_account_term = dbm_get_relation(array('global-pages', 'my-account'));
-				$sign_in_term = dbm_get_relation(array('global-pages', 'sign-in'));
-				$sign_up_term = dbm_get_relation(array('global-pages', 'sign-in', 'sign-up'));
-			
-				if(isset($my_account_term) && has_term($my_account_term->term_id, 'dbm_relation') && !$is_logged_in) {
-					wp_redirect($this->get_global_page_url(array('global-pages', 'sign-in')), 302);
-					exit;
-				}
-			
-				if(isset($sign_in_term) && has_term($sign_in_term->term_id, 'dbm_relation') && $is_logged_in) {
-					wp_redirect($this->get_global_page_url(array('global-pages', 'sign-in', 'start-page')), 302);
-					exit;
-				}
-			
-				if(isset($sign_up_term) && has_term($sign_up_term->term_id, 'dbm_relation') && $is_logged_in) {
-					wp_redirect($this->get_global_page_url(array('global-pages', 'my-account')), 302);
-					exit;
-				}
-				
-				if(isset($sign_in_term) && !$is_logged_in) {
+				if(is_singular()) {
+					$current_id = get_the_ID();
 					
+					$my_account_term = dbm_get_relation(array('global-pages', 'my-account'));
+					$sign_in_term = dbm_get_relation(array('global-pages', 'sign-in'));
+					$sign_up_term = dbm_get_relation(array('global-pages', 'sign-in', 'sign-up'));
 					$forgot_term = dbm_get_relation(array('global-pages', 'reset-password'));
 					$reset_term = dbm_get_relation(array('global-pages', 'lost-password'));
 					$ignore_term = dbm_get_relation_by_path('restrict-access/ignore-login-restriction');
 					
+					if(isset($my_account_term) && has_term($my_account_term->term_id, 'dbm_relation') && !$is_logged_in) {
+						wp_redirect($this->get_global_page_url(array('global-pages', 'sign-in')), 302);
+						exit;
+					}
+					
+					if(isset($sign_in_term) && has_term($sign_in_term->term_id, 'dbm_relation') && $is_logged_in) {
+						wp_redirect($this->get_global_page_url(array('global-pages', 'sign-in', 'start-page')), 302);
+						exit;
+					}
+					
+					if(isset($sign_up_term) && has_term($sign_up_term->term_id, 'dbm_relation') && $is_logged_in) {
+						wp_redirect($this->get_global_page_url(array('global-pages', 'my-account')), 302);
+						exit;
+					}
+					
 					if(!$this->has_any_relation(array($sign_in_term, $sign_up_term, $forgot_term, $reset_term, $ignore_term))) {
 						
 						$require_sign_in_term = dbm_get_relation_by_path('restrict-access/require-signed-in');
-					
+						
 						$require_sign_in = (isset($require_sign_in_term) && has_term($require_sign_in_term->term_id, 'dbm_relation')) || apply_filters('dbm_custom_login/require_sign_in_for_all_pages', false, get_the_ID(), get_post());
-					
+						
 						if($require_sign_in) {
-							$sign_in_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
+							if(!$is_logged_in) {
+								if(isset($sign_in_term)) {
+									$sign_in_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
+								}
+								else {
+									$sign_in_url = wp_login_url();
+								}
 							
-							$requested_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+								$requested_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 							
-							$sign_in_url .= '?redirect_to='.urlencode($requested_url);
-							wp_redirect($sign_in_url, 302);
-							exit;
+								$sign_in_url .= '?redirect_to='.urlencode($requested_url);
+								wp_redirect($sign_in_url, 302);
+								exit;
+							}
+							else {
+								$user = wp_get_current_user();
+								$required_role_term_ids = dbm_get_post_relation($current_id, 'require-role');
+								if(!empty($required_role_term_ids) && !current_user_can('administrator')) {
+									$allowed_roles = array();
+									foreach($required_role_term_ids as $term_id) {
+										$term = get_term_by('id', $term_id, 'dbm_relation');
+										if($term) {
+											$allowed_roles[] = $term->slug;
+										}
+									}
+									
+									$mathcing_roles = array_intersect($allowed_roles, $user->roles);
+									
+									if(empty($mathcing_roles)) {
+										$no_access_term = dbm_get_relation(array('global-pages', 'sign-in', 'no-access-message'));
+										
+										if(isset($no_access_term)) {
+											$no_access_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'no-access-message'));
+										}
+										else {
+											$no_access_url = get_home_url();
+										}
+										
+										$requested_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+										
+										$no_access_url .= '?redirect_to='.urlencode($requested_url);
+										wp_redirect($no_access_url, 302);
+										exit;
+									}
+								}
+							}
 						}
 					}
-				}
-				
-				if(is_singular()) {
-					$current_id = get_the_ID();
 					
 					if(dbm_has_post_type($current_id, 'magic-link')) {
 						dbm_custom_login_try_to_apply_magic_link($current_id, $_GET['code'], $_GET['validation']);

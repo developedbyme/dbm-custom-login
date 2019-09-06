@@ -65,6 +65,7 @@
 		}
 		
 		public static function run_setup() {
+			global $wp_roles;
 			
 			//METODO: add dbm terms
 			self::add_term('dbm_type:notice', 'Notice');
@@ -81,10 +82,18 @@
 			self::add_term('dbm_relation:global-pages/sign-in/sign-up', 'Sign up');
 			self::add_term('dbm_relation:global-pages/sign-in/signed-out', 'Signed out');
 			self::add_term('dbm_relation:global-pages/sign-in/start-page', 'Start page');
+			self::add_term('dbm_relation:global-pages/sign-in/no-access-message', 'No access message');
 			
 			self::add_term('dbm_relation:restrict-access', 'Restrict access');
 			self::add_term('dbm_relation:restrict-access/require-signed-in', 'Require signed in');
 			self::add_term('dbm_relation:restrict-access/ignore-login-restriction', 'Ignore login restriction');
+			
+			self::add_term('dbm_relation:require-role', 'Require role');
+			
+			$roles = $wp_roles->roles;
+			foreach($roles as $slug => $role) {
+				self::add_term('dbm_relation:require-role/'.$slug, $role['name']);
+			}
 			
 			self::add_term('dbm_relation:notice-types', 'Notice types');
 			self::add_term('dbm_relation:notice-types/error-notice', 'Error notice');
@@ -98,22 +107,42 @@
 			self::add_term('dbm_relation:magic-link-status/used', 'Used');
 			self::add_term('dbm_relation:magic-link-status/cancelled', 'Cancelled');
 			
-			$current_page_id = self::create_page('sign-in', 'Sign in', 'page');
-			self::add_terms_to_post(array('dbm_relation:global-pages/sign-in', 'dbm_relation:global-pages/sign-in/signed-out'), $current_page_id);
-			$current_parent_id = $current_page_id;
+			$exisiting_id = dbm_new_query('page')->add_relation_by_path('global-pages/sign-in')->get_post_id();
+			if(!$exisiting_id) {
+				$current_page_id = self::create_page('sign-in', 'Sign in', 'page');
+				self::add_terms_to_post(array('dbm_relation:global-pages/sign-in', 'dbm_relation:global-pages/sign-in/signed-out'), $current_page_id);
+				$current_parent_id = $current_page_id;
+			}
+			else {
+				$current_parent_id = $exisiting_id;
+			}
 			
-			$current_page_id = self::create_page('lost-password', 'Lost password', 'page', $current_parent_id);
-			self::add_terms_to_post(array('dbm_relation:global-pages/lost-password'), $current_page_id);
+			$exisiting_id = dbm_new_query('page')->add_relation_by_path('global-pages/lost-password')->get_post_id();
+			if(!$exisiting_id) {
+				$current_page_id = self::create_page('lost-password', 'Lost password', 'page', $current_parent_id);
+				self::add_terms_to_post(array('dbm_relation:global-pages/lost-password'), $current_page_id);
+			}
 			
-			$current_page_id = self::create_page('my-account', 'My account', 'page');
-			self::add_terms_to_post(array('dbm_relation:global-pages/my-account', 'dbm_relation:global-pages/sign-in/start-page'), $current_page_id);
+			$exisiting_id = dbm_new_query('page')->add_relation_by_path('global-pages/my-account')->get_post_id();
+			if(!$exisiting_id) {
+				$current_page_id = self::create_page('my-account', 'My account', 'page');
+				self::add_terms_to_post(array('dbm_relation:global-pages/my-account', 'dbm_relation:global-pages/sign-in/start-page'), $current_page_id);
+			}
 			
-			$current_page_id = self::create_page('reset-password', 'Reset password', 'page', $current_parent_id);
-			self::add_terms_to_post(array('dbm_relation:global-pages/reset-password'), $current_page_id);
+			$exisiting_id = dbm_new_query('page')->add_relation_by_path('global-pages/reset-password')->get_post_id();
+			if(!$exisiting_id) {
+				$current_page_id = self::create_page('reset-password', 'Reset password', 'page', $current_parent_id);
+				self::add_terms_to_post(array('dbm_relation:global-pages/reset-password'), $current_page_id);
+			}
 			
+			$exisiting_id = dbm_new_query('page')->add_relation_by_path('global-pages/sign-in/no-access-message')->get_post_id();
+			if(!$exisiting_id) {
+				$current_page_id = self::create_page('no-access', 'No access', 'page', $current_parent_id);
+				self::add_terms_to_post(array('dbm_relation:global-pages/sign-in/no-access-message'), $current_page_id);
+			}
+		
 			$current_page_id = self::create_page('magic-links', 'Magic links', 'dbm_additional');
 			self::add_terms_to_post(array('dbm_type:admin-grouping', 'dbm_type:admin-grouping/magic-links'), $current_page_id);
-			
 			
 			$notice_parent_id = self::create_page('notices', 'Notices', 'dbm_area');
 			

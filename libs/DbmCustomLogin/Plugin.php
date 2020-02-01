@@ -32,6 +32,8 @@
 			if(function_exists('dbm_content_add_owned_relationship')) {
 				dbm_content_add_owned_relationship_with_auto_add('notice', 'notices');
 			}
+			
+			add_action('wprr/prepare_api_user', array($this, 'hook_wprr_prepare_api_user'), $this->_default_hook_priority, 1);
 		}
 		
 		protected function create_additional_hooks() {
@@ -79,6 +81,32 @@
 			
 			parent::hook_admin_enqueue_scripts();
 			
+		}
+		
+		public function hook_wprr_prepare_api_user($data) {
+			//echo("\DbmCustomLogin\Plugin::hook_wprr_prepare_api_user<br />");
+			
+			$key = $data->get_header('X-dbm-api-key');
+			if($key) {
+				
+			
+				$key_post_id = dbm_new_query('dbm_data')->set_field('post_status', array('publish', 'private'))->add_type_by_path('api-key')->add_meta_query('key', $key)->get_post_id();
+				if($key_post_id) {
+					$userId = (int)get_post_meta($key_post_id, 'userId', true);
+					$password = $data->get_header('X-dbm-api-password');
+				
+					$salt = 'S<KUn@DHY/JY.M9X)zh0<dJ-H~89j}Ge>-H?;r@Pr:k=~_R^GX?(}Gdqji[+~i_+';
+		
+					$encoded_password = md5($userId.$key.$password.$salt);
+					
+					$stored_encoded_password = get_post_meta($key_post_id, 'password', true);
+					
+					if($encoded_password === $stored_encoded_password) {
+						wp_set_current_user($userId);
+					}
+				}
+			
+			}
 		}
 		
 		public function activation_setup() {

@@ -125,6 +125,7 @@
 			$key_post_id = dbm_new_query('dbm_data')->set_field('post_status', array('publish', 'private'))->add_type_by_path('api-key')->add_meta_query('userId', $userId)->add_meta_query('key', $key)->add_meta_query('password', $encoded_password)->get_post_id();
 			
 			$response_data['isValid'] = ($key_post_id > 0);
+			$response_data['userId'] = get_current_user_id();
 		}
 		
 		public function hook_generate_magic_link($data, &$response_data) {

@@ -15,6 +15,9 @@
 			add_action('wprr/api_action/has-user', array($this, 'hook_has_user'), 10, 2);
 			add_action('wprr/api_action/register-user', array($this, 'hook_register_user'), 10, 2);
 			
+			add_action('wprr/api_action/get-api-key', array($this, 'hook_get_api_key'), 10, 2);
+			add_action('wprr/api_action/test-api-key', array($this, 'hook_test_api_key'), 10, 2);
+			
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
 		}
 
@@ -79,6 +82,49 @@
 			}
 			
 			$response_data['registered'] = $registered;
+		}
+		
+		public function hook_get_api_key($data, &$response_data) {
+			//echo("\DbmCustomLogin\ApiActionHooks::hook_get_api_key<br />");
+			
+			$login = $data['log'];
+			$password = $data['pwd'];
+			
+			$user = wp_authenticate($login, $password);
+ 
+			if(is_wp_error($user)) {
+				$error = $user;
+				throw(new \Exception($error->getMessage()));
+			}
+			
+			$encoder = new \Wprr\WprrEncoder();
+			
+			$response_data['user'] = $encoder->encode_user_with_private_data($user);
+			
+			wp_set_current_user($user->ID);
+			
+			$response_data['roles'] = $user->roles;
+			$response_data['restNonce'] = wp_create_nonce('wp_rest');
+			
+			$key = create_api_key($user->ID);
+			
+			$response_data['key'] = $key;
+		}
+		
+		public function hook_test_api_key($data, &$response_data) {
+			//echo("\DbmCustomLogin\ApiActionHooks::hook_test_api_key<br />");
+			
+			$userId = (int)$data['userId'];
+			$key = $data['apiKey'];
+			$password = $data['password'];
+			
+			$salt = 'S<KUn@DHY/JY.M9X)zh0<dJ-H~89j}Ge>-H?;r@Pr:k=~_R^GX?(}Gdqji[+~i_+';
+		
+			$encoded_password = md5($userId.$key.$password.$salt);
+			
+			$key_post_id = dbm_new_query('dbm_data')->set_field('post_status', array('publish', 'private'))->add_type_by_path('api-key')->add_meta_query('userId', $userId)->add_meta_query('key', $key)->add_meta_query('password', $encoded_password)->get_post_id();
+			
+			$response_data['isValid'] = ($key_post_id > 0);
 		}
 		
 		public function hook_generate_magic_link($data, &$response_data) {

@@ -106,4 +106,34 @@
 			exit;
 		}
 	}
+	
+	function create_api_key($user_id) {
+		
+		$time_zone = get_option('timezone_string');
+		if($time_zone) {
+			date_default_timezone_set($time_zone);
+		}
+		
+		$current_date = new \DateTime();
+		
+		$new_id = dbm_create_data('Api key - ' . $user_id . ' - ' . $current_date->format('Y-m-d H:i:s'), 'api-key', 'admin-grouping/api-keys');
+		
+		$key = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+		$password = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+		
+		$salt = 'S<KUn@DHY/JY.M9X)zh0<dJ-H~89j}Ge>-H?;r@Pr:k=~_R^GX?(}Gdqji[+~i_+';
+		
+		$encoded_password = md5($user_id.$key.$password.$salt);
+		
+		update_post_meta($new_id, 'userId', $user_id);
+		update_post_meta($new_id, 'key', $key);
+		update_post_meta($new_id, 'password', $encoded_password);
+		
+		wp_update_post(array(
+			'ID' => $new_id,
+			'post_status' => 'private'
+		));
+		
+		return array('id' => $new_id, 'key' => $key, 'password' => $password);
+	}
 ?>

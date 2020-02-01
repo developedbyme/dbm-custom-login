@@ -67,12 +67,13 @@
 		public static function run_setup() {
 			global $wp_roles;
 			
-			//METODO: add dbm terms
 			self::add_term('dbm_type:notice', 'Notice');
 			self::add_term('dbm_type:admin-grouping', 'Admin grouping');
 			self::add_term('dbm_type:admin-grouping/magic-links', 'Magic links');
+			self::add_term('dbm_type:admin-grouping/api-keys', 'Api keys');
 			
 			self::add_term('dbm_type:magic-link', 'Magic link');
+			self::add_term('dbm_type:api-key', 'Api key');
 			
 			self::add_term('dbm_relation:global-pages', 'Global pages');
 			self::add_term('dbm_relation:global-pages/lost-password', 'Lost password');

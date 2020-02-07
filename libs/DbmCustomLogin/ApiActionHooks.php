@@ -91,10 +91,10 @@
 			$password = $data['pwd'];
 			
 			$user = wp_authenticate($login, $password);
- 
+			
 			if(is_wp_error($user)) {
 				$error = $user;
-				throw(new \Exception($error->getMessage()));
+				throw(new \Exception($error->get_error_message()));
 			}
 			
 			$encoder = new \Wprr\WprrEncoder();

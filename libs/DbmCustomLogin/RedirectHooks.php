@@ -223,7 +223,7 @@
 			
 			// Check if the earlier authenticate filter (most likely, 
 			// the default WordPress authentication) functions have found errors
-			if($_SERVER['REQUEST_METHOD'] === 'POST') {
+			if($_SERVER['REQUEST_METHOD'] === 'POST' && (!defined('REST_REQUEST') || !REST_REQUEST)) {
 				if(is_wp_error($user)) {
 					
 					$sign_in_page_url = $this->get_global_page_url(array('global-pages', 'sign-in'));

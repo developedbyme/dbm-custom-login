@@ -60,9 +60,9 @@
 						
 						wp_update_user(array(
 							'ID' => $new_user_id,
-							'display_name' => $data['firstName'],
 							'first_name' => $data['firstName'],
 							'last_name' => $data['lastName'],
+							'display_name' => $data['firstName'].' '.$data['lastName'],
 						));
 						
 						do_action('dbm_custom_login/set_new_user_data', $new_user_id, $data);

@@ -24,9 +24,17 @@
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
 		}
 		
+		public function hook_catch_token($logged_in_cookie, $expire, $expiration, $user_id, $type, $token) {
+			global $new_token;
+			
+			$new_token = $token;
+		}
+		
 		public function hook_login($data, &$response_data) {
+			
 			$login = $data['log'];
 			$password = $data['pwd'];
+			$remember = isset($data['remember']) ? $data['remember'] : false;
 			
 			$user = wp_authenticate($login, $password);
 			
@@ -40,12 +48,25 @@
 			$response_data['authenticated'] = true;
 			$response_data['user'] = $encoder->encode_user_with_private_data($user);
 			
+			add_action('set_logged_in_cookie', array($this, 'hook_catch_token'), 10, 6);
+			
 			wp_clear_auth_cookie();
 			wp_set_current_user($user->ID);
-			wp_set_auth_cookie($user->ID);
+			wp_set_auth_cookie($user->ID, $remember);
 			
 			$response_data['roles'] = $user->roles;
-			$response_data['restNonce'] = wp_create_nonce('wp_rest');
+			
+			//MENOTE: this is modified from wp_create_nonce('wp_rest'); as the session is not in the cookie variable
+			global $new_token;
+			
+			$action = 'wp_rest';
+			$uid = $user->ID;
+			$token = $new_token;
+			$i = wp_nonce_tick();
+			
+			$nonce = substr( wp_hash( $i . '|' . $action . '|' . $uid . '|' . $token, 'nonce' ), -12, 10 );
+			
+			$response_data['restNonce'] = $nonce;
 			$response_data['restNonceGeneratedAt'] = time();
 		}
 		

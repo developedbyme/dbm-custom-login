@@ -12,6 +12,9 @@
 		public function register() {
 			//echo("\DbmCustomLogin\ApiActionHooks::register<br />");
 			
+			add_action('wprr/api_action/login', array($this, 'hook_login'), 10, 2);
+			add_action('wprr/api_action/logout', array($this, 'hook_logout'), 10, 2);
+			
 			add_action('wprr/api_action/has-user', array($this, 'hook_has_user'), 10, 2);
 			add_action('wprr/api_action/register-user', array($this, 'hook_register_user'), 10, 2);
 			
@@ -19,6 +22,41 @@
 			add_action('wprr/api_action/test-api-key', array($this, 'hook_test_api_key'), 10, 2);
 			
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
+		}
+		
+		public function hook_login($data, &$response_data) {
+			$login = $data['log'];
+			$password = $data['pwd'];
+			
+			$user = wp_authenticate($login, $password);
+			
+			if(is_wp_error($user)) {
+				$error = $user;
+				throw(new \Exception($error->get_error_message()));
+			}
+			
+			$encoder = new \Wprr\WprrEncoder();
+			
+			$response_data['authenticated'] = true;
+			$response_data['user'] = $encoder->encode_user_with_private_data($user);
+			
+			wp_clear_auth_cookie();
+			wp_set_current_user($user->ID);
+			wp_set_auth_cookie($user->ID);
+			
+			$response_data['roles'] = $user->roles;
+			$response_data['restNonce'] = wp_create_nonce('wp_rest');
+			$response_data['restNonceGeneratedAt'] = time();
+		}
+		
+		public function hook_logout($data, &$response_data) {
+			
+			$response_data['authenticated'] = false;
+			$response_data['loggedOutUser'] = get_current_user_id();
+			
+			wp_destroy_current_session();
+			wp_clear_auth_cookie();
+			wp_set_current_user(0);
 		}
 
 		public function hook_has_user($data, &$response_data) {
@@ -55,8 +93,17 @@
 						$response_data['userId'] = $user_exists;
 					}
 					else {
-						$new_user_id = wp_create_user($email, $data['password'], $email);
-						unset($data['password']);
+						
+						if(isset($data['password'])) {
+							$password = $data['password'];
+							unset($data['password']);
+						}
+						else {
+							$password = wp_generate_password();
+						}
+						
+						$new_user_id = wp_create_user($email, $password, $email);
+						
 						
 						wp_update_user(array(
 							'ID' => $new_user_id,

@@ -136,4 +136,34 @@
 		
 		return array('id' => $new_id, 'key' => $key, 'password' => $password);
 	}
+	
+	function dbm_custom_login_catch_token($logged_in_cookie, $expire, $expiration, $user_id, $type, $token) {
+		global $new_token;
+		
+		$new_token = $token;
+	}
+	
+	function dbm_custom_login_perform_login($user, $remember = false) {
+		
+		add_action('set_logged_in_cookie', 'dbm_custom_login_catch_token', 10, 6);
+		
+		wp_clear_auth_cookie();
+		wp_set_current_user($user->ID);
+		wp_set_auth_cookie($user->ID, $remember);
+		
+		//MENOTE: this is modified from wp_create_nonce('wp_rest'); as the session is not in the cookie variable
+		global $new_token;
+		
+		$action = 'wp_rest';
+		$uid = $user->ID;
+		$token = $new_token;
+		$i = wp_nonce_tick();
+		
+		$nonce = substr( wp_hash( $i . '|' . $action . '|' . $uid . '|' . $token, 'nonce' ), -12, 10 );
+		
+		return array(
+			'restNonce' => $nonce,
+			'restNonceGeneratedAt' => time()
+		);
+	}
 ?>

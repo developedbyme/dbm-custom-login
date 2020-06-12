@@ -24,11 +24,7 @@
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
 		}
 		
-		public function hook_catch_token($logged_in_cookie, $expire, $expiration, $user_id, $type, $token) {
-			global $new_token;
-			
-			$new_token = $token;
-		}
+		
 		
 		public function hook_login($data, &$response_data) {
 			
@@ -47,27 +43,12 @@
 			
 			$response_data['authenticated'] = true;
 			$response_data['user'] = $encoder->encode_user_with_private_data($user);
-			
-			add_action('set_logged_in_cookie', array($this, 'hook_catch_token'), 10, 6);
-			
-			wp_clear_auth_cookie();
-			wp_set_current_user($user->ID);
-			wp_set_auth_cookie($user->ID, $remember);
-			
 			$response_data['roles'] = $user->roles;
 			
-			//MENOTE: this is modified from wp_create_nonce('wp_rest'); as the session is not in the cookie variable
-			global $new_token;
+			$nonce_data = dbm_custom_login_perform_login($user, $remember);
 			
-			$action = 'wp_rest';
-			$uid = $user->ID;
-			$token = $new_token;
-			$i = wp_nonce_tick();
-			
-			$nonce = substr( wp_hash( $i . '|' . $action . '|' . $uid . '|' . $token, 'nonce' ), -12, 10 );
-			
-			$response_data['restNonce'] = $nonce;
-			$response_data['restNonceGeneratedAt'] = time();
+			$response_data['restNonce'] = $nonce_data['restNonce'];
+			$response_data['restNonceGeneratedAt'] = $nonce_data['restNonceGeneratedAt'];
 		}
 		
 		public function hook_logout($data, &$response_data) {
@@ -141,9 +122,12 @@
 						
 						$login_after_new_user_created = apply_filters('dbm_custom_login/login_after_new_user_created', true, $new_user_id, $data);
 						if($login_after_new_user_created) {
-							wp_clear_auth_cookie();
-							wp_set_current_user($new_user_id);
-							wp_set_auth_cookie($new_user_id);
+							
+							$user = get_user_by('id', $new_user_id);
+							$nonce_data = dbm_custom_login_perform_login($user);
+							
+							$response_data['restNonce'] = $nonce_data['restNonce'];
+							$response_data['restNonceGeneratedAt'] = $nonce_data['restNonceGeneratedAt'];
 						}
 					}
 				}

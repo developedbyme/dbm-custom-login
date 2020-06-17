@@ -44,6 +44,7 @@
 			}
 			
 			$return_object['id'] = $invite_id;
+			$return_object['token'] = $data['token'];
 			
 			$post = dbm_get_post($invite_id);
 			$status = $post->get_single_relation('invite-status');

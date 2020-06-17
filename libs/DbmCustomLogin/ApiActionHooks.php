@@ -81,9 +81,16 @@
 			
 			$registered = false;
 			
+			$method = 'default';
+			if(isset($data['method'])) {
+				$method = $data['method'];
+			}
+			
 			$can_register = apply_filters('dbm_custom_login/can_register', false, $data);
+			$can_register = apply_filters('dbm_custom_login/can_register/'.$method, $can_register, $data);
 			if($can_register) {
 				$registration_is_verified = apply_filters('dbm_custom_login/registration_is_verified', true, $data);
+				$registration_is_verified = apply_filters('dbm_custom_login/registration_is_verified/'.$method, $registration_is_verified, $data);
 				$response_data['verified'] = $registration_is_verified;
 				
 				if($registration_is_verified) {
@@ -115,7 +122,9 @@
 						));
 						
 						do_action('dbm_custom_login/set_new_user_data', $new_user_id, $data);
+						do_action('dbm_custom_login/set_new_user_data/'.$method, $new_user_id, $data);
 						do_action('dbm_custom_login/new_user_created', $new_user_id, $data);
+						do_action('dbm_custom_login/new_user_created/'.$method, $new_user_id, $data);
 						
 						$registered = true;
 						$response_data['userId'] = $new_user_id;

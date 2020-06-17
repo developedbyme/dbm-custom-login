@@ -41,6 +41,8 @@
 			
 			$this->add_additional_hook(new \DbmCustomLogin\RedirectHooks());
 			$this->add_additional_hook(new \DbmCustomLogin\ApiActionHooks());
+			$this->add_additional_hook(new \DbmCustomLogin\ChangePostHooks());
+			$this->add_additional_hook(new \DbmCustomLogin\CustomRangeFilters());
 			
 		}
 		
@@ -63,9 +65,7 @@
 		protected function create_filters() {
 			//echo("\DbmCustomLogin\Plugin::create_filters<br />");
 
-			$custom_range_filters = new \DbmCustomLogin\CustomRangeFilters();
 			
-			add_filter('wprr/range_encoding/notice', array($custom_range_filters, 'encode_notice'), 10, 2);
 		}
 		
 		protected function create_shortcodes() {

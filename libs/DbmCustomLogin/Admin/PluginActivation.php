@@ -71,9 +71,16 @@
 			self::add_term('dbm_type:admin-grouping', 'Admin grouping');
 			self::add_term('dbm_type:admin-grouping/magic-links', 'Magic links');
 			self::add_term('dbm_type:admin-grouping/api-keys', 'Api keys');
+			self::add_term('dbm_type:admin-grouping/signup-invites', 'Signup invites');
 			
 			self::add_term('dbm_type:magic-link', 'Magic link');
 			self::add_term('dbm_type:api-key', 'Api key');
+			self::add_term('dbm_type:signup-invite', 'Signup invite');
+			
+			self::add_term('dbm_type:object-relation', 'Object relation');
+			self::add_term('dbm_type:object-relation/invite-for', 'Invite for');
+			self::add_term('dbm_type:object-user-relation', 'Object user relation');
+			self::add_term('dbm_type:object-user-relation/invite-used-by', 'Invite used by');
 			
 			self::add_term('dbm_relation:global-pages', 'Global pages');
 			self::add_term('dbm_relation:global-pages/lost-password', 'Lost password');
@@ -95,6 +102,11 @@
 			foreach($roles as $slug => $role) {
 				self::add_term('dbm_relation:require-role/'.$slug, $role['name']);
 			}
+			
+			self::add_term('dbm_relation:invite-status', 'Invite status');
+			self::add_term('dbm_relation:invite-status/open', 'Open');
+			self::add_term('dbm_relation:invite-status/cancelled', 'Cancelled');
+			self::add_term('dbm_relation:invite-status/used', 'Used');
 			
 			self::add_term('dbm_relation:notice-types', 'Notice types');
 			self::add_term('dbm_relation:notice-types/error-notice', 'Error notice');
@@ -144,6 +156,12 @@
 		
 			$current_page_id = self::create_page('magic-links', 'Magic links', 'dbm_additional');
 			self::add_terms_to_post(array('dbm_type:admin-grouping', 'dbm_type:admin-grouping/magic-links'), $current_page_id);
+			
+			$current_page_id = self::create_page('api-keys', 'Api keys', 'dbm_data');
+			self::add_terms_to_post(array('dbm_type:admin-grouping', 'dbm_type:admin-grouping/api-keys'), $current_page_id);
+			
+			$current_page_id = self::create_page('signup-invites', 'Signup invites', 'dbm_data');
+			self::add_terms_to_post(array('dbm_type:admin-grouping', 'dbm_type:admin-grouping/signup-invites'), $current_page_id);
 			
 			$notice_parent_id = self::create_page('notices', 'Notices', 'dbm_area');
 			

@@ -41,7 +41,7 @@
 			$token = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
 			$post->update_meta('token', $token);
 			
-			$post->add_outgoing_relation_by_name($post_id, 'invite-for');
+			$post->add_outgoing_relation_by_name($for_id, 'invite-for');
 			
 			$post->update_meta('data', $data['value']);
 			

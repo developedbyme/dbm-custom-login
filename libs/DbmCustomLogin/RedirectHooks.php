@@ -96,6 +96,7 @@
 								$requested_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 							
 								$sign_in_url .= '?redirect_to='.urlencode($requested_url);
+								
 								wp_redirect($sign_in_url, 302);
 								exit;
 							}
@@ -272,7 +273,7 @@
 					// Non-admin users always go to their account page after login
 					$start_page_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'start-page'));
 					if($start_page_url !== null) {
-						$redirect_url = $start_page_url;
+						$redirect_url = apply_filters("dbm_custom_login/default_start_page", $start_page_url, $user);
 					}
 					else {
 						$redirect_url = $requested_redirect_to;
@@ -283,12 +284,12 @@
 			else {
 				if($requested_redirect_to == '') {
 					if(user_can($user, 'edit_posts')) {
-						$redirect_url = admin_url();
+						$redirect_url = apply_filters("dbm_custom_login/default_start_page", admin_url(), $user);
 					}
 					else {
 						$start_page_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'start-page'));
 						if($start_page_url !== null) {
-							$redirect_url = $start_page_url;
+							$redirect_url = apply_filters("dbm_custom_login/default_start_page", $start_page_url, $user);
 						}
 						else {
 							$redirect_url = $redirect_to;

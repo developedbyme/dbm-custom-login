@@ -92,7 +92,6 @@
 			$key = $data->get_header('X-dbm-api-key');
 			if($key) {
 				
-			
 				$key_post_id = dbm_new_query('dbm_data')->set_field('post_status', array('publish', 'private'))->add_type_by_path('api-key')->add_meta_query('key', $key)->get_post_id();
 				if($key_post_id) {
 					$userId = (int)get_post_meta($key_post_id, 'userId', true);
@@ -107,6 +106,12 @@
 					if($encoded_password === $stored_encoded_password) {
 						wp_set_current_user($userId);
 					}
+					else {
+						throw(new \Exception("Invalid credentials"));
+					}
+				}
+				else {
+					throw(new \Exception("Invalid key"));
 				}
 			
 			}

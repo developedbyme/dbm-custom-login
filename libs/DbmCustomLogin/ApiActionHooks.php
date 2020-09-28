@@ -98,7 +98,7 @@
 					
 					$user_exists = email_exists($email);
 					if($user_exists) {
-						$response_data['alreadyRegistered'] = $registered;
+						$response_data['alreadyRegistered'] = true;
 						$response_data['userId'] = $user_exists;
 					}
 					else {
@@ -113,6 +113,10 @@
 						
 						$new_user_id = wp_create_user($email, $password, $email);
 						
+						if(is_wp_error($new_user_id)) {
+							$error = $new_user_id;
+							throw(new \Exception($error->get_error_message()));
+						}
 						
 						wp_update_user(array(
 							'ID' => $new_user_id,
@@ -128,6 +132,11 @@
 						
 						$registered = true;
 						$response_data['userId'] = $new_user_id;
+						
+						$user = get_user_by('id', $new_user_id);
+						$encoder = new \Wprr\WprrEncoder();
+						$response_data['user'] = $encoder->encode_user_with_private_data($user);
+						$response_data['roles'] = $user->roles;
 						
 						$login_after_new_user_created = apply_filters('dbm_custom_login/login_after_new_user_created', true, $new_user_id, $data);
 						if($login_after_new_user_created) {

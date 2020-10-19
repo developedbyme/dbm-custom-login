@@ -22,6 +22,11 @@
 			add_action('wprr/api_action/test-api-key', array($this, 'hook_test_api_key'), 10, 2);
 			
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
+			
+			add_action('wprr/api_action/dbmcl/startIdentification', array($this, 'hook_startIdentification'), 10, 2);
+			add_action('wprr/api_action/dbmcl/verifyIdentification', array($this, 'hook_verifyIdentification'), 10, 2);
+			add_action('wprr/api_action/dbmcl/loginWithIdentification', array($this, 'hook_loginWithIdentification'), 10, 2);
+			add_action('wprr/api_action/dbmcl/cancelIdentification', array($this, 'hook_cancelIdentification'), 10, 2);
 		}
 		
 		
@@ -214,6 +219,55 @@
 			
 			$response_data['link'] = dbm_custom_login_create_magic_link($user_id, $link);
 			
+		}
+		
+		public function hook_startIdentification($data, &$response_data) {
+			//echo("\DbmCustomLogin\ApiActionHooks::hook_startIdentification<br />");
+			
+			$type = $data['type'];
+			$data = $data['data'];
+			
+			$type_term = dbm_get_relation_by_path('identification-type/'.$type);
+			
+			if(!$type_term) {
+				throw(new \Exception('No type '.$type));
+			}
+			
+			if(!has_action('dbmcl/identification/'.$type.'/start')) {
+				throw(new \Exception('No start function for '.$type));
+			}
+			
+			$can_identify = apply_filters('dbmcl/identification/'.$type.'/canIdentifyData', true, $data);
+			if(!$can_identify) {
+				throw(new \Exception('Can\'t identify data'));
+			}
+			
+			$salt = 'v/,+Kfm(j({wb|+?[2OD>0=@ksOny5%4tl|DM#]B~dj-mlU2y.F!GO?%@gHz]$uq'; //METODO: add filter for this salt
+			$time = time();
+			$key = uniqid('', true);
+			
+			$post_id = dbm_create_data('New identification', 'identification', 'identifications');
+			$post = dbm_get_post($post_id);
+			
+			dbm_add_post_relation($post_id, 'identification-type/'.$type);
+			dbm_add_post_relation($post_id, 'identification-status/unverified');
+			$post->update_meta('generatedAt', $time);
+			
+			$hashed_key = md5($post_id.$time.$key.$salt);
+			$post->update_meta('hashedKey', $hashed_key);
+			$post->update_meta('data', $data);
+			
+			do_action('dbmcl/identification/'.$type.'/start', $post_id);
+			
+			$response_data['key'] = $key;
+			$encoded_identifiction = array('id' => $post_id);
+			
+			$encoded_identifiction = wprr_encode_item_as('identification', $encoded_identifiction, $post_id);
+			$encoded_identifiction = wprr_encode_item_as('identification_'.$type, $encoded_identifiction, $post_id);
+			
+			$response_data['identifiction'] = $encoded_identifiction;
+			
+			return $response_data;
 		}
 		
 		public static function test_import() {

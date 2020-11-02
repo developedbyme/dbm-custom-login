@@ -260,14 +260,122 @@
 			do_action('dbmcl/identification/'.$type.'/start', $post_id);
 			
 			$response_data['key'] = $key;
-			$encoded_identifiction = array('id' => $post_id);
+			$encoded_identification = array('id' => $post_id);
 			
-			$encoded_identifiction = wprr_encode_item_as('identification', $encoded_identifiction, $post_id);
-			$encoded_identifiction = wprr_encode_item_as('identification_'.$type, $encoded_identifiction, $post_id);
+			$encoded_identification = wprr_encode_item_as('identification', $encoded_identification, $post_id);
+			$encoded_identification = wprr_encode_item_as('identification_'.$type, $encoded_identification, $post_id);
 			
-			$response_data['identifiction'] = $encoded_identifiction;
+			$response_data['identification'] = $encoded_identification;
 			
 			return $response_data;
+		}
+		
+		public function hook_verifyIdentification($data, &$response_data) {
+			$post_id = $data['id'];
+			$key = $data['key'];
+			
+			$post = dbmtc_get_group($post_id);
+			$time = $post->get_meta('generatedAt');
+			$stored_key = $post->get_meta('hashedKey');
+			$salt = 'v/,+Kfm(j({wb|+?[2OD>0=@ksOny5%4tl|DM#]B~dj-mlU2y.F!GO?%@gHz]$uq'; //METODO: add filter for this salt
+			
+			$hashed_key = md5($post_id.$time.$key.$salt);
+			
+			if($hashed_key !== $stored_key) {
+				throw(new \Exception('Incorrect key'));
+			}
+			
+			$type = $post->get_field_value('type');
+			$status = $post->get_field_value('status');
+			if($status === 'unverified') {
+				
+				if(!has_action('dbmcl/identification/'.$type.'/verify')) {
+					throw(new \Exception('No start function for '.$type));
+				}
+				
+				do_action('dbmcl/identification/'.$type.'/verify', $post_id);
+				
+				$status = $post->get_field_value('status');
+			}
+			
+			$response_data['status'] = $status;
+			$encoded_identification = array('id' => $post_id);
+			
+			$encoded_identification = wprr_encode_item_as('identification', $encoded_identification, $post_id);
+			$encoded_identification = wprr_encode_item_as('identification_'.$type, $encoded_identification, $post_id);
+			
+			$response_data['identification'] = $encoded_identification;
+			
+			return $response_data;
+		}
+		
+		public function hook_loginWithIdentification($data, &$response_data) {
+			$post_id = $data['id'];
+			$key = $data['key'];
+			
+			$post = dbmtc_get_group($post_id);
+			$time = $post->get_meta('generatedAt');
+			$stored_key = $post->get_meta('hashedKey');
+			$salt = 'v/,+Kfm(j({wb|+?[2OD>0=@ksOny5%4tl|DM#]B~dj-mlU2y.F!GO?%@gHz]$uq'; //METODO: add filter for this salt
+			
+			$hashed_key = md5($post_id.$time.$key.$salt);
+			
+			if($hashed_key !== $stored_key) {
+				throw(new \Exception('Incorrect key'));
+			}
+			
+			$type = $post->get_field_value('type');
+			$status = $post->get_field_value('status');
+			
+			if($status !== 'verified') {
+				throw(new \Exception('Not verified'));
+			}
+			
+			$logged_in_user = apply_filters('dbmcl/identification/'.$type.'/get_user', 0, $post_id);
+			
+			if(!$logged_in_user) {
+				throw(new \Exception('No user for identification'));
+			}
+			
+			$can_login = apply_filters('dbmcl/identification/'.$type.'/can_login', false, $logged_in_user, $post_id);
+			if(!$can_login) {
+				throw(new \Exception('Log in not allowed'));
+			}
+			
+			$user = get_user_by('id', $logged_in_user);
+			$nonce_data = dbm_custom_login_perform_login($user);
+			
+			$encoder = new \Wprr\WprrEncoder();
+			$response_data['user'] = $encoder->encode_user_with_private_data($user);
+			$response_data['roles'] = $user->roles;
+			
+			$response_data['restNonce'] = $nonce_data['restNonce'];
+			$response_data['restNonceGeneratedAt'] = $nonce_data['restNonceGeneratedAt'];
+			
+			do_action('dbmcl/identification/'.$type.'/logged_in', $post_id);
+		}
+		
+		public function hook_cancelIdentification($data, &$response_data) {
+			$post_id = $data['id'];
+			$key = $data['key'];
+			
+			$post = dbmtc_get_group($post_id);
+			$time = $post->get_meta('generatedAt');
+			$stored_key = $post->get_meta('hashedKey');
+			$salt = 'v/,+Kfm(j({wb|+?[2OD>0=@ksOny5%4tl|DM#]B~dj-mlU2y.F!GO?%@gHz]$uq'; //METODO: add filter for this salt
+			
+			$hashed_key = md5($post_id.$time.$key.$salt);
+			
+			if($hashed_key !== $stored_key) {
+				throw(new \Exception('Incorrect key'));
+			}
+			
+			$type = $post->get_field_value('type');
+			$status = $post->get_field_value('status');
+			if($status === 'unverified') {
+				$status = $post->set_field('status', 'cancelled');
+				do_action('dbmcl/identification/'.$type.'/cancel', $post_id);
+			}
 		}
 		
 		public static function test_import() {

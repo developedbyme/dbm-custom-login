@@ -126,6 +126,7 @@
 			self::add_term('dbm_relation:identification-status/verified', 'Verified');
 			self::add_term('dbm_relation:identification-status/cancelled', 'Cancelled');
 			self::add_term('dbm_relation:identification-status/failed-creation', 'Failed creation');
+			self::add_term('dbm_relation:identification-status/failed', 'Failed');
 			
 			self::add_term('dbm_relation:identification-type', 'Identification type');
 			self::add_term('dbm_relation:identification-type/text-message', 'Text message');

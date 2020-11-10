@@ -306,6 +306,15 @@
 			
 			$response_data['identification'] = $encoded_identification;
 			
+			$encoder = new \Wprr\WprrEncoder();
+			$user = apply_filters('dbmcl/identification/'.$type.'/get_user', 0, $post_id);
+			if($user) {
+				$response_data['user'] = $encoder->encode_user(get_user_by('id', $user));
+			}
+			else {
+				$response_data['user'] = null;
+			}
+			
 			return $response_data;
 		}
 		

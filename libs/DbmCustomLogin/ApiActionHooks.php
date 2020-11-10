@@ -290,7 +290,7 @@
 			if($status === 'unverified') {
 				
 				if(!has_action('dbmcl/identification/'.$type.'/verify')) {
-					throw(new \Exception('No start function for '.$type));
+					throw(new \Exception('No verification function for '.$type));
 				}
 				
 				do_action('dbmcl/identification/'.$type.'/verify', $post_id);

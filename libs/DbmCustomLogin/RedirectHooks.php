@@ -89,7 +89,8 @@
 								if(isset($sign_in_term)) {
 									$sign_in_url = $this->get_global_page_url(array('global-pages', 'sign-in'));
 								}
-								else {
+								
+								if(!$sign_in_url) {
 									$sign_in_url = wp_login_url();
 								}
 							
@@ -120,7 +121,8 @@
 										if(isset($no_access_term)) {
 											$no_access_url = $this->get_global_page_url(array('global-pages', 'sign-in', 'no-access-message'));
 										}
-										else {
+										
+										if(!$no_access_url) {
 											$no_access_url = get_home_url();
 										}
 										

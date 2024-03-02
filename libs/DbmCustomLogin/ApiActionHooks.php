@@ -48,7 +48,7 @@
 			
 			$response_data['authenticated'] = true;
 			$response_data['user'] = $encoder->encode_user_with_private_data($user);
-			$response_data['roles'] = $user->roles;
+			$response_data['roles'] = array_values($user->roles);
 			
 			$nonce_data = dbm_custom_login_perform_login($user, $remember);
 			
@@ -141,7 +141,7 @@
 						$user = get_user_by('id', $new_user_id);
 						$encoder = new \Wprr\WprrEncoder();
 						$response_data['user'] = $encoder->encode_user_with_private_data($user);
-						$response_data['roles'] = $user->roles;
+						$response_data['roles'] = array_values($user->roles);
 						
 						$login_after_new_user_created = apply_filters('dbm_custom_login/login_after_new_user_created', true, $new_user_id, $data);
 						if($login_after_new_user_created) {
@@ -178,7 +178,7 @@
 			
 			wp_set_current_user($user->ID);
 			
-			$response_data['roles'] = $user->roles;
+			$response_data['roles'] = array_values($user->roles);
 			$response_data['restNonce'] = wp_create_nonce('wp_rest');
 			
 			$key = create_api_key($user->ID);
@@ -356,7 +356,7 @@
 			
 			$encoder = new \Wprr\WprrEncoder();
 			$response_data['user'] = $encoder->encode_user_with_private_data($user);
-			$response_data['roles'] = $user->roles;
+			$response_data['roles'] = array_values($user->roles);
 			
 			$response_data['restNonce'] = $nonce_data['restNonce'];
 			$response_data['restNonceGeneratedAt'] = $nonce_data['restNonceGeneratedAt'];

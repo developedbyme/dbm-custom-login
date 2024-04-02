@@ -23,12 +23,6 @@
 			
 		}
 		
-		protected function update_message_meta($message, $meta) {
-			foreach($meta as $key => $value) {
-				$message->update_meta($key, $value);
-			}
-		}
-		
 		public function hook_dbmcl_createInvite($data, $post_id, $logger) {
 			//var_dump('\DbmCustomLogin\ChangePostHooks::hook_dbmtc_commentChange');
 			

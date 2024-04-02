@@ -18,9 +18,6 @@
 			add_action('wprr/api_action/has-user', array($this, 'hook_has_user'), 10, 2);
 			add_action('wprr/api_action/register-user', array($this, 'hook_register_user'), 10, 2);
 			
-			add_action('wprr/api_action/get-api-key', array($this, 'hook_get_api_key'), 10, 2);
-			add_action('wprr/api_action/test-api-key', array($this, 'hook_test_api_key'), 10, 2);
-			
 			add_action('wprr/api_action/generate-magic-link', array($this, 'hook_generate_magic_link'), 10, 2);
 			
 			add_action('wprr/api_action/dbmcl/startIdentification', array($this, 'hook_startIdentification'), 10, 2);
@@ -29,7 +26,33 @@
 			add_action('wprr/api_action/dbmcl/cancelIdentification', array($this, 'hook_cancelIdentification'), 10, 2);
 		}
 		
+		public function encode_user($user) {
+			
+			$return_object = array();
+			
+			$return_object['id'] = $user->ID;
+			$return_object['name'] = $user->display_name;
+			
+			$return_object['gravatarHash'] = md5( strtolower( trim( $user->user_email ) ) );
+			
+			return $return_object;
+		}
 		
+		public function encode_user_with_private_data($user) {
+			
+			$return_object = array();
+			
+			$return_object['id'] = $user->ID;
+			$return_object['permalink'] = get_author_posts_url($user->ID);
+			$return_object['firstName'] = $user->first_name;
+			$return_object['lastName'] = $user->last_name;
+			$return_object['name'] = $user->display_name;
+			$return_object['email'] = $user->user_email;
+			
+			$return_object['gravatarHash'] = md5( strtolower( trim( $user->user_email ) ) );
+			
+			return $return_object;
+		}
 		
 		public function hook_login($data, &$response_data) {
 			
@@ -44,10 +67,8 @@
 				throw(new \Exception($error->get_error_message()));
 			}
 			
-			$encoder = new \Wprr\WprrEncoder();
-			
 			$response_data['authenticated'] = true;
-			$response_data['user'] = $encoder->encode_user_with_private_data($user);
+			$response_data['user'] = $this->encode_user_with_private_data($user);
 			$response_data['roles'] = array_values($user->roles);
 			
 			$nonce_data = dbm_custom_login_perform_login($user, $remember);
@@ -139,8 +160,7 @@
 						$response_data['userId'] = $new_user_id;
 						
 						$user = get_user_by('id', $new_user_id);
-						$encoder = new \Wprr\WprrEncoder();
-						$response_data['user'] = $encoder->encode_user_with_private_data($user);
+						$response_data['user'] = $this->encode_user_with_private_data($user);
 						$response_data['roles'] = array_values($user->roles);
 						
 						$login_after_new_user_created = apply_filters('dbm_custom_login/login_after_new_user_created', true, $new_user_id, $data);
@@ -157,50 +177,6 @@
 			}
 			
 			$response_data['registered'] = $registered;
-		}
-		
-		public function hook_get_api_key($data, &$response_data) {
-			//echo("\DbmCustomLogin\ApiActionHooks::hook_get_api_key<br />");
-			
-			$login = $data['log'];
-			$password = $data['pwd'];
-			
-			$user = wp_authenticate($login, $password);
-			
-			if(is_wp_error($user)) {
-				$error = $user;
-				throw(new \Exception($error->get_error_message()));
-			}
-			
-			$encoder = new \Wprr\WprrEncoder();
-			
-			$response_data['user'] = $encoder->encode_user_with_private_data($user);
-			
-			wp_set_current_user($user->ID);
-			
-			$response_data['roles'] = array_values($user->roles);
-			$response_data['restNonce'] = wp_create_nonce('wp_rest');
-			
-			$key = create_api_key($user->ID);
-			
-			$response_data['key'] = $key;
-		}
-		
-		public function hook_test_api_key($data, &$response_data) {
-			//echo("\DbmCustomLogin\ApiActionHooks::hook_test_api_key<br />");
-			
-			$userId = (int)$data['userId'];
-			$key = $data['apiKey'];
-			$password = $data['password'];
-			
-			$salt = 'S<KUn@DHY/JY.M9X)zh0<dJ-H~89j}Ge>-H?;r@Pr:k=~_R^GX?(}Gdqji[+~i_+';
-		
-			$encoded_password = md5($userId.$key.$password.$salt);
-			
-			$key_post_id = dbm_new_query('dbm_data')->set_field('post_status', array('publish', 'private'))->add_type_by_path('api-key')->add_meta_query('userId', $userId)->add_meta_query('key', $key)->add_meta_query('password', $encoded_password)->get_post_id();
-			
-			$response_data['isValid'] = ($key_post_id > 0);
-			$response_data['userId'] = get_current_user_id();
 		}
 		
 		public function hook_generate_magic_link($data, &$response_data) {
@@ -306,10 +282,9 @@
 			
 			$response_data['identification'] = $encoded_identification;
 			
-			$encoder = new \Wprr\WprrEncoder();
 			$user = apply_filters('dbmcl/identification/'.$type.'/get_user', 0, $post_id);
 			if($user) {
-				$response_data['user'] = $encoder->encode_user(get_user_by('id', $user));
+				$response_data['user'] = $this->encode_user(get_user_by('id', $user));
 			}
 			else {
 				$response_data['user'] = null;
@@ -354,8 +329,7 @@
 			$user = get_user_by('id', $logged_in_user);
 			$nonce_data = dbm_custom_login_perform_login($user);
 			
-			$encoder = new \Wprr\WprrEncoder();
-			$response_data['user'] = $encoder->encode_user_with_private_data($user);
+			$response_data['user'] = $this->encode_user_with_private_data($user);
 			$response_data['roles'] = array_values($user->roles);
 			
 			$response_data['restNonce'] = $nonce_data['restNonce'];

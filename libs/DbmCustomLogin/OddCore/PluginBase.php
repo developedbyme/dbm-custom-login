@@ -37,7 +37,7 @@
 		}
 		
 		protected function create_pages() {
-			echo("\DbmCustomLogin\OddCore\PluginBase::create_pages<br />");
+			//echo("\DbmCustomLogin\OddCore\PluginBase::create_pages<br />");
 			
 			//MENOTE: should be overridden
 		}

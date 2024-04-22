@@ -355,6 +355,9 @@
 			$nonce_data = dbm_custom_login_perform_login($user);
 			
 			$encoder = new \Wprr\WprrEncoder();
+			
+			$response_data['authenticated'] = true;
+			
 			$response_data['user'] = $encoder->encode_user_with_private_data($user);
 			$response_data['roles'] = array_values($user->roles);
 			
